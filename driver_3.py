@@ -27,7 +27,7 @@ class Solver(object):
             self.rootState = PuzzleState(self.puzzle)
             self.rootState.showPuzzle()
             if method == "bfs":
-                self.bfs_search()
+                self.bfs_search(False)
             elif method == "dfs":
                 self.dfs_search()
             elif method == "ast":
@@ -54,7 +54,7 @@ class Solver(object):
         else:
             return False
 
-    def bfs_search(self):
+    def bfs_search(self, ceroUp = True):
 
         initialState = self.rootState
         q = queue.Queue()
@@ -65,7 +65,7 @@ class Solver(object):
 
         while not q.empty():
             currentState = q.get()
-            if currentState.isSolved(False):
+            if currentState.isSolved(ceroUp):
                 print("Solved")
                 currentState.showPuzzle()
                 self.getPath(currentState)
@@ -79,7 +79,7 @@ class Solver(object):
                         q.put(c)
         return None
 
-    def dfs_search(self):
+    def dfs_search(self, ceroUp = True):
 
         initialState = self.rootState
         q = queue.LifoQueue()
@@ -88,7 +88,7 @@ class Solver(object):
         q.put(initialState)
         while not q.empty():
             currentState = q.get()
-            if currentState.isSolved(False):
+            if currentState.isSolved(ceroUp):
                 print("Solved")
                 currentState.showPuzzle()
                 self.getPath(currentState)
@@ -100,7 +100,7 @@ class Solver(object):
                     if c.puzzle not in visited:
                         q.put(c)
 
-    def ast_search(self):
+    def ast_search(self, ceroUp = True):
          
         initialState = self.rootState
         q = queue.PriorityQueue()
@@ -109,7 +109,7 @@ class Solver(object):
         q.put(0, initialState)
         while not q.empty():
             currentState = q.get()
-            if currentState.isSolved(False):
+            if currentState.isSolved(ceroUp):
                 print("Solved")
                 currentState.showPuzzle()
                 self.getPath(currentState)
@@ -119,7 +119,7 @@ class Solver(object):
                 children = currentState.expandNode()
                 for c in children:
                     if c.puzzle not in visited:
-                        q.put(c.missplacedPieces(False), c)
+                        q.put(c.missplacedPieces(ceroUp), c)
 
     def getPath(self, PuzzleState):
         self.path.append(PuzzleState.action)
@@ -147,7 +147,7 @@ class PuzzleState(object):
                     break
         self.n = len(self.puzzle)
 
-    def missplacedPieces(self, ceroUp = True):
+    def missplacedPieces(self, ceroUp):
         puzzleArr = []
         for x in range(len(self.puzzle)):
             for y in range(len(self.puzzle)):
@@ -243,6 +243,6 @@ class PuzzleState(object):
 
         return self.children
             
-S = Solver("7,1,3,8,5,0,2,6,4", "ast")
+S = Solver("2,7,4,0,1,5,8,6,3", "bfs")
 
 """1,4,3,2,0,5,8,7,6"""
