@@ -12,8 +12,8 @@ class Solver(object):
         self.configArr = list(map(int, self.configArr))
         if not self.isSquare(len(self.configArr)):
             raise Exception ("The configuration is not a square")
-        elif not self.isSolvable():
-            raise Exception ("The configuration is not solvable")
+        #elif not self.isSolvable():
+         #   raise Exception ("The configuration is not solvable")
         else:
             self.n = int(math.sqrt(len(self.configArr)))
             self.method = method
@@ -31,7 +31,7 @@ class Solver(object):
             elif method == "dfs":
                 self.dfs_search()
             elif method == "ast":
-                self.ast_search()
+                self.ast_search(False)
 
     def isSquare(self, num):
         root = math.sqrt(num)
@@ -61,6 +61,7 @@ class Solver(object):
     
         #Save puzzle configurations
         visited = []
+        frontier = []
         q.put(initialState)
 
         while not q.empty():
@@ -72,11 +73,12 @@ class Solver(object):
                 return currentState
             else:
                 visited.append(currentState.puzzle)
-                #currentState.showPuzzle()
+                if currentState.puzzle in frontier: frontier.remove(currentState.puzzle)
                 children = currentState.expandNode()
                 for c in children:
-                    if c.puzzle not in visited:
+                    if c.puzzle not in visited and c.puzzle not in frontier:
                         q.put(c)
+                        frontier.append(c.puzzle)
         return None
 
     def dfs_search(self, ceroUp = True):
@@ -104,11 +106,13 @@ class Solver(object):
          
         initialState = self.rootState
         q = queue.PriorityQueue()
-
+        counter = 0
         visited = []
-        q.put(0, initialState)
+        frontier = []
+        q.put((1, 0, initialState))
         while not q.empty():
-            currentState = q.get()
+            currentState = q.get()[2]
+            #currentState.showPuzzle()
             if currentState.isSolved(ceroUp):
                 print("Solved")
                 currentState.showPuzzle()
@@ -116,10 +120,13 @@ class Solver(object):
                 return currentState
             else:
                 visited.append(currentState.puzzle)
+                if currentState.puzzle in frontier: frontier.remove(currentState.puzzle)
                 children = currentState.expandNode()
                 for c in children:
-                    if c.puzzle not in visited:
-                        q.put(c.missplacedPieces(ceroUp), c)
+                    counter += 1
+                    if c.puzzle not in visited and c.puzzle not in frontier:
+                        q.put((c.manhattanDistance(ceroUp) + c.cost, counter,c))
+                        frontier.append(c.puzzle)
 
     def getPath(self, PuzzleState):
         self.path.append(PuzzleState.action)
@@ -162,6 +169,35 @@ class PuzzleState(object):
             if not puzzleArr[x] == solvedPuzzle[x]:
                 missplacedPieces += 1
         return missplacedPieces
+
+    def get2DIndex(self, array, value):
+        i = 0
+        for li in array:
+            if value in li:
+                return (i, li.index(value))
+            i += 1
+        return None
+
+    def manhattanDistance(self, ceroUp = True):
+        solvedPuzzle = [[0 for x in range(len(self.puzzle))] for y in range(len(self.puzzle))]
+        mDistance = 0
+        k = 0
+        if ceroUp:
+            k = 0
+        else:
+            k = 1
+        for x in range(len(self.puzzle)):
+                for y in range(len(self.puzzle)):
+                    solvedPuzzle[x][y] = k
+                    k += 1
+        if ceroUp is False:
+            solvedPuzzle[len(solvedPuzzle) - 1][len(solvedPuzzle) - 1] = 0
+        
+        for x in range(len(self.puzzle)):
+            for y in range(len(self.puzzle)):
+                coord = self.get2DIndex(solvedPuzzle, self.puzzle[x][y])
+                mDistance += abs(x - coord[0]) + abs(y - coord[1])
+        return mDistance
 
     
     def isSolved(self, ceroUp = True):
@@ -243,6 +279,6 @@ class PuzzleState(object):
 
         return self.children
             
-S = Solver("2,7,4,0,1,5,8,6,3", "bfs")
+S = Solver("6,1,7,8,2,4,3,0,5", "bfs")
 
 """1,4,3,2,0,5,8,7,6"""
